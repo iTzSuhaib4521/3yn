@@ -92,4 +92,7 @@ server.listen(3000, () => {
   console.log("🟢 keep alive");
 }, 1000 * 60 * 5); // كل 5 دقائق
 
+socket.on("pingServer", () => {});
+  
 });
+
