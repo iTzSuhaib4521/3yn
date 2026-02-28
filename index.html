@@ -138,7 +138,13 @@
   function getName() {
     return document.getElementById("name").value || "لاعب";
   }
+  setInterval(() => {
+  if (socket.connected) {
+    socket.emit("pingServer");
+  }
+}, 30000);
 </script>
 
 </body>
+
 </html>
