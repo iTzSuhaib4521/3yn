@@ -4,7 +4,10 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  pingInterval: 25000,
+  pingTimeout: 60000,
+});
 
 app.use(express.static("public"));
 
@@ -84,4 +87,9 @@ io.on("connection", (socket) => {
 
 server.listen(3000, () => {
   console.log("🚀 Server running on http://localhost:3000");
+
+  setInterval(() => {
+  console.log("🟢 keep alive");
+}, 1000 * 60 * 5); // كل 5 دقائق
+
 });
