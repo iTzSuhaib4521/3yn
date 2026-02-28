@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>أسرع واحد يضغط الزر</title>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding-top: 60px;
+    }
+
+    input, button {
+      padding: 12px;
+      font-size: 16px;
+      margin: 6px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    input {
+      width: 220px;
+    }
+
+    button {
+      cursor: pointer;
+      background: #22c55e;
+      color: black;
+    }
+
+    #gameBtn {
+      font-size: 30px;
+      padding: 25px 50px;
+      background: #facc15;
+      margin-top: 20px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⚡ أسرع واحد يضغط الزر</h1>
+
+<div id="login">
+  <input id="name" placeholder="اسمك">
+  <br>
+  <button onclick="createRoom()">إنشاء غرفة</button>
+  <br>
+  <input id="code" placeholder="كود الغرفة">
+  <button onclick="joinRoom()">دخول</button>
+</div>
+
+<div id="room" style="display:none">
+  <h2>📦 الغرفة: <span id="roomCode"></span></h2>
+
+  <button id="gameBtn" onclick="press()">اضغط!</button>
+  <br><br>
+  <button onclick="reset()">🔄 إعادة الجولة</button>
+
+  <h3 id="winnerText">—</h3>
+
+  <h3>🏆 النقاط</h3>
+  <ul id="players"></ul>
+</div>
+
+<script>
+  const socket = io();
+  let roomCode = null;
+
+  function createRoom() {
+    const name = getName();
+    socket.emit("createRoom", name);
+  }
+
+  function joinRoom() {
+    const name = getName();
+    roomCode = document.getElementById("code").value.toUpperCase();
+    socket.emit("joinRoom", { code: roomCode, playerName: name });
+    enterRoom(roomCode);
+  }
+
+  function press() {
+    socket.emit("pressButton", roomCode);
+  }
+
+  function reset() {
+    socket.emit("resetRound", roomCode);
+  }
+
+  socket.on("roomCreated", (code) => {
+    roomCode = code;
+    enterRoom(code);
+  });
+
+  socket.on("playersUpdate", (players) => {
+    renderPlayers(players);
+  });
+
+  socket.on("winner", (data) => {
+    document.getElementById("winnerText").textContent =
+      `🥇 المركز الأول: ${data.name}`;
+    renderPlayers(data.players);
+  });
+
+  socket.on("roundReset", () => {
+    document.getElementById("winnerText").textContent =
+      "— الجولة الجديدة بدأت —";
+  });
+
+  socket.on("errorMessage", (msg) => {
+    alert(msg);
+  });
+
+  function renderPlayers(players) {
+    const ul = document.getElementById("players");
+    ul.innerHTML = "";
+    Object.values(players).forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = `${p.name} — ⭐ ${p.points}`;
+      ul.appendChild(li);
+    });
+  }
+
+  function enterRoom(code) {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("room").style.display = "block";
+    document.getElementById("roomCode").textContent = code;
+  }
+
+  function getName() {
+    return document.getElementById("name").value || "لاعب";
+  }
+</script>
+
+</body>
+</html>
